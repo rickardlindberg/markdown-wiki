@@ -5,15 +5,13 @@ import Data.List
 import Data.Maybe
 import Process
 import qualified Data.Map as M
+import Query
 import System.Directory
 import System.Environment
 import System.FilePath
 import Text.Pandoc
+import Types
 import WikiName
-
-type Pages = M.Map WikiName Pandoc
-
-type WikiName = String
 
 readPages :: FilePath -> IO Pages
 readPages dir = do
@@ -65,19 +63,6 @@ templify name html pages = unlines
     , "  </body>"
     , "</html>"
     ]
-
-linkReach :: WikiName -> Pages -> [[WikiName]]
-linkReach name pages = [name] : [delete name (findLinksFrom name pages)]
-
-findLinksFrom :: WikiName -> Pages -> [WikiName]
-findLinksFrom name pages =
-    case M.lookup name pages of
-        Nothing   -> []
-        Just page -> queryWith findWikiLinks page
-
-findWikiLinks :: Inline -> [WikiName]
-findWikiLinks (Str str) = map snd $ filter fst $ splitOnWikiNames str
-findWikiLinks _         = []
 
 nav :: WikiName -> Pages -> String
 nav name pages = unlines
