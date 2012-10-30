@@ -88,7 +88,7 @@ vertices levels = concatMap foo (zip ["#ff0000", "#00ff00", "#0000ff"] levels)
 edges :: [WikiName] -> Pages -> String
 edges names pages = concatMap foo names
     where
-        foo name = concatMap (\x -> "g.createEdge(\"" ++ name ++ "\", \"" ++ x ++ "\");\n") (findLinksFrom name pages)
+        foo name = concatMap (\x -> "g.createEdge(\"" ++ name ++ "\", \"" ++ x ++ "\");\n") (filter (`elem` names) (findLinksFrom name pages))
 
 main :: IO ()
 main = do
