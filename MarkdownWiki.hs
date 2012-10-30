@@ -32,7 +32,8 @@ writePages dir pages = mapM_ writePage (M.assocs pages)
         writePage (name, pandoc) = do
             let processed = bottomUp linkify pandoc
             let html = writeHtmlString defaultWriterOptions processed
-            writeFile (dir </> name ++ ".html") html
+            let templified = templify name html pages
+            writeFile (dir </> name ++ ".html") templified
 
 linkify :: [Inline] -> [Inline]
 linkify []             = []
@@ -50,6 +51,37 @@ splitWikiWord str =
     case str =~ wikiNameRegex of
         (x, "", "")           -> [(False, x)]
         (before, match, rest) -> [(False, before), (True, match)] ++ splitWikiWord rest
+
+getRoot :: String -> String
+getRoot name = "./" ++ name
+
+templify :: WikiName -> String -> Pages -> String
+templify name html pages = unlines
+    [ "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\""
+    , "\"http://www.w3.org/TR/html4/strict.dtd\">"
+    , "<html>"
+    , "  <head>"
+    , "    <title>" ++ name ++ "</title>"
+    , "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
+    , "    <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/blueprint/screen.css\" type=\"text/css\" media=\"screen, projection\">"
+    , "    <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/blueprint/print.css\" type=\"text/css\" media=\"print\"> "
+    , "    <!--[if lt IE 8]>"
+    , "      <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/blueprint/ie.css\" type=\"text/css\" media=\"screen, projection\">"
+    , "    <![endif]-->"
+    , "    <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/pygments/syntax.css\" type=\"text/css\"> "
+    , "    <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/layout.css\" type=\"text/css\"> "
+    , "    <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/colors.css\" type=\"text/css\"> "
+    , "  </head>"
+    , "  <body>"
+    , "    <div class=\"container noshowgrid\">"
+    , "      <div class=\"span-20 prepend-2 append-2\">"
+    , "        <h1>" ++ name ++ "</h1>"
+    , html
+    , "      </div>"
+    , "    </div>"
+    , "  </body>"
+    , "</html>"
+    ]
 
 main :: IO ()
 main = do
