@@ -7,7 +7,11 @@ import Types
 import WikiName
 
 linkReach :: WikiName -> Pages -> [[WikiName]]
-linkReach name pages = [name] : [delete name (findLinksFrom name pages)]
+linkReach name pages =
+    let level1 = [name]
+        level2 = foldr delete (findLinksFrom name pages) level1
+        level3 = foldr delete (concatMap (\name -> findLinksFrom name pages) level2) (name:level2)
+    in [level1, level2, level3]
 
 findLinksFrom :: WikiName -> Pages -> [WikiName]
 findLinksFrom name pages =
