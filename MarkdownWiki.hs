@@ -1,3 +1,5 @@
+module MarkdownWiki where
+
 import Control.Monad
 import qualified Data.Map as M
 import System.Directory
@@ -35,3 +37,9 @@ main :: IO ()
 main = do
     [inDir, outDir] <- getArgs
     readPages inDir >>= writePages outDir
+
+splitWikiWord :: String -> [(Bool, String)]
+splitWikiWord str =
+    case str =~ wikiNameRegex of
+        (x, "", "") -> [(False, x)]
+        (before, match, rest) -> [(False, before), (True, match)] ++ splitWikiWord rest
