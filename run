@@ -1,2 +1,2 @@
 #!/bin/sh
-ghc -outputdir bin -o bin/MarkdownWiki --make MarkdownWiki.hs -main-is MarkdownWiki && ./bin/MarkdownWiki $*
+ghc -Werror -fwarn-unused-imports -outputdir bin -o bin/MarkdownWiki --make MarkdownWiki.hs -main-is MarkdownWiki && ./bin/MarkdownWiki $*

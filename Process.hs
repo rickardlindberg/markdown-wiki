@@ -7,9 +7,9 @@ process :: Pandoc -> Pandoc
 process = bottomUp linkify
 
 linkify :: [Inline] -> [Inline]
-linkify []             = []
-linkify ((Str str):xs) = toLink str ++ linkify xs
-linkify (x:xs)         = x           : linkify xs
+linkify []           = []
+linkify (Str str:xs) = toLink str ++ linkify xs
+linkify (x:xs)       = x           : linkify xs
 
 toLink :: String -> [Inline]
 toLink = map toInline . splitOnWikiNames

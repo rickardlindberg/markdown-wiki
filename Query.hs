@@ -27,13 +27,10 @@ graphFrom name pages =
         addLevel :: [[WikiName]] -> [(Int, WikiName)]
         addLevel links = concatMap (\(level, list) -> map (\e -> (level, e)) list) $ zip [1..] links
 
-linkReach :: WikiName -> Pages -> [[WikiName]]
-linkReach name pages = foo findLinksFrom name pages
-
 foo fn name pages =
     let level1 = [name]
         level2 = foldr delete (fn name pages) level1
-        level3 = foldr delete (concatMap (\name -> fn name pages) level2) (name:level2)
+        level3 = foldr delete (concatMap (`fn` pages) level2) (name:level2)
     in [level1, level2, level3]
 
 findLinksTo :: WikiName -> Pages -> [WikiName]

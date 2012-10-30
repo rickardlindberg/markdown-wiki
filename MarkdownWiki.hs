@@ -1,8 +1,5 @@
 module MarkdownWiki where
 
-import Control.Monad
-import Data.List
-import Data.Maybe
 import Process
 import qualified Data.Map as M
 import Query
