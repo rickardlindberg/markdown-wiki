@@ -30,16 +30,28 @@ writePages :: FilePath -> Pages -> IO ()
 writePages dir pages = mapM_ writePage (M.assocs pages)
     where
         writePage (name, pandoc) = do
-            let html = writeHtmlString defaultWriterOptions pandoc
+            let processed = bottomUp linkify pandoc
+            let html = writeHtmlString defaultWriterOptions processed
             writeFile (dir </> name ++ ".html") html
+
+linkify :: [Inline] -> [Inline]
+linkify []             = []
+linkify ((Str str):xs) = toLink str ++ linkify xs
+linkify (x:xs)         = x           : linkify xs
+
+toLink :: String -> [Inline]
+toLink = map toInline . splitWikiWord
+    where
+        toInline (True, x)  = Link [Str x] (x ++ ".html", x)
+        toInline (False, x) = Str x
+
+splitWikiWord :: String -> [(Bool, String)]
+splitWikiWord str =
+    case str =~ wikiNameRegex of
+        (x, "", "")           -> [(False, x)]
+        (before, match, rest) -> [(False, before), (True, match)] ++ splitWikiWord rest
 
 main :: IO ()
 main = do
     [inDir, outDir] <- getArgs
     readPages inDir >>= writePages outDir
-
-splitWikiWord :: String -> [(Bool, String)]
-splitWikiWord str =
-    case str =~ wikiNameRegex of
-        (x, "", "") -> [(False, x)]
-        (before, match, rest) -> [(False, before), (True, match)] ++ splitWikiWord rest
