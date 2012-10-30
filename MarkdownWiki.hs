@@ -8,7 +8,7 @@ import System.Directory
 import System.Environment
 import System.FilePath
 import Text.Pandoc
-import Text.Regex.Posix
+import WikiName
 
 type Pages = M.Map WikiName Pandoc
 
@@ -22,11 +22,6 @@ readPages dir = do
     contents <- mapM readFile wikiPaths
     let pandocs = map (readMarkdown defaultParserState) contents
     return $ M.fromList (zip wikiFiles pandocs)
-
-isWikiName :: String -> Bool
-isWikiName string = string =~ ("^" ++ wikiNameRegex ++ "$")
-
-wikiNameRegex = "\\b([A-Z][a-z]+)([A-Z][a-z]+)+\\b"
 
 writePages :: FilePath -> Pages -> IO ()
 writePages dir pages = mapM_ writePage (M.assocs pages)
@@ -43,16 +38,10 @@ linkify ((Str str):xs) = toLink str ++ linkify xs
 linkify (x:xs)         = x           : linkify xs
 
 toLink :: String -> [Inline]
-toLink = map toInline . splitWikiWord
+toLink = map toInline . splitOnWikiNames
     where
         toInline (True, x)  = Link [Str x] (x ++ ".html", x)
         toInline (False, x) = Str x
-
-splitWikiWord :: String -> [(Bool, String)]
-splitWikiWord str =
-    case str =~ wikiNameRegex of
-        (x, "", "")           -> [(False, x)]
-        (before, match, rest) -> [(False, before), (True, match)] ++ splitWikiWord rest
 
 getRoot :: String -> String
 getRoot name = "./" ++ name
@@ -98,7 +87,7 @@ findLinksFrom name pages =
         Just page -> queryWith findWikiLinks page
 
 findWikiLinks :: Inline -> [WikiName]
-findWikiLinks (Str str) = map snd $ filter fst $ splitWikiWord str
+findWikiLinks (Str str) = map snd $ filter fst $ splitOnWikiNames str
 findWikiLinks _         = []
 
 nav :: WikiName -> Pages -> String
