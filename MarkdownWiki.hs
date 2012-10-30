@@ -74,22 +74,23 @@ nav name pages = unlines
     , "    // reduce repulsion and spring length for more compact layout"
     --, "    g.repulsion = g.repulsion / 8;"
     --, "    g.spring_length = 1;"
-    , vertices $ linkReach name pages
-    , edges (concat $ linkReach name pages) pages
+    , graph name pages
     , "    g.go();"
     --, "]]>"
     , "</script>"
     ]
 
-vertices :: [[WikiName]] -> String
-vertices levels = concatMap foo (zip ["#ff0000", "#00ff00", "#0000ff"] levels)
+graph :: WikiName -> Pages -> String
+graph name pages =
+    let (Graph vertices edges) = graphFrom name pages
+        vList = map (\(level, name) -> "g.createVertex(\"" ++ name ++ "\", \"" ++ color level ++ "\");") vertices
+        eList = map (\(from, to) -> "g.createEdge(\"" ++ from ++ "\", \"" ++ to ++ "\");") edges
+    in unlines $ vList ++ eList
     where
-        foo (color, names) = concatMap (\x -> "g.createVertex(\"" ++ x ++ "\", \"" ++ color ++ "\");\n") names
-
-edges :: [WikiName] -> Pages -> String
-edges names pages = concatMap foo names
-    where
-        foo name = concatMap (\x -> "g.createEdge(\"" ++ name ++ "\", \"" ++ x ++ "\");\n") (filter (`elem` names) (findLinksFrom name pages))
+        color 1 = "#ff0000"
+        color 2 = "#00ff00"
+        color 3 = "#0000ff"
+        color _ = "#ffffff"
 
 main :: IO ()
 main = do
