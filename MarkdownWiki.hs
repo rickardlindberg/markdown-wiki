@@ -3,6 +3,7 @@ module MarkdownWiki where
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Process
 import qualified Data.Map as M
 import System.Directory
 import System.Environment
@@ -27,21 +28,9 @@ writePages :: FilePath -> Pages -> IO ()
 writePages dir pages = mapM_ writePage (M.assocs pages)
     where
         writePage (name, pandoc) = do
-            let processed = bottomUp linkify pandoc
-            let html = writeHtmlString defaultWriterOptions processed
+            let html = writeHtmlString defaultWriterOptions (process pandoc)
             let templified = templify name html pages
             writeFile (dir </> name ++ ".html") templified
-
-linkify :: [Inline] -> [Inline]
-linkify []             = []
-linkify ((Str str):xs) = toLink str ++ linkify xs
-linkify (x:xs)         = x           : linkify xs
-
-toLink :: String -> [Inline]
-toLink = map toInline . splitOnWikiNames
-    where
-        toInline (True, x)  = Link [Str x] (x ++ ".html", x)
-        toInline (False, x) = Str x
 
 getRoot :: String -> String
 getRoot name = "./" ++ name
