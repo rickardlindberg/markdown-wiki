@@ -1,0 +1,2 @@
+#!/bin/sh
+ghc -outputdir bin -o bin/Properties --make Properties.hs -main-is Properties && ./bin/Properties
