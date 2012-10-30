@@ -19,7 +19,8 @@ readPages dir = do
     let wikiFiles = filter isWikiName fileNames
     let wikiPaths = map (dir </>) wikiFiles
     contents <- mapM readFile wikiPaths
-    let pandocs = map (readMarkdown defaultParserState) contents
+    let soyWikiProcessed = map (unlines . drop 2 . lines) contents
+    let pandocs = map (readMarkdown defaultParserState) soyWikiProcessed
     return $ M.fromList (zip wikiFiles pandocs)
 
 writePages :: FilePath -> Pages -> IO ()
