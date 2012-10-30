@@ -24,7 +24,7 @@ readPages dir = do
 isWikiName :: String -> Bool
 isWikiName string = string =~ ("^" ++ wikiNameRegex ++ "$")
 
-wikiNameRegex = "\\b([A-Z][a-z]+)+\\b"
+wikiNameRegex = "\\b([A-Z][a-z]+)([A-Z][a-z]+)+\\b"
 
 writePages :: FilePath -> Pages -> IO ()
 writePages dir pages = mapM_ writePage (M.assocs pages)
