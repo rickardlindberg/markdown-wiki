@@ -24,7 +24,7 @@ writePages :: FilePath -> Pages -> IO ()
 writePages dir pages = mapM_ writePage (M.assocs pages)
     where
         writePage (name, pandoc) = do
-            let html = writeHtmlString defaultWriterOptions (process pandoc)
+            let html = writeHtmlString defaultWriterOptions (process (getRoot "") pandoc)
             let templified = templify name html pages
             writeFile (dir </> name ++ ".html") templified
 
