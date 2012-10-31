@@ -80,7 +80,7 @@ nav name pages = unlines
 graph :: WikiName -> Pages -> String
 graph name pages =
     let (Graph vertices edges) = graphFrom name pages
-        vList = map (\(level, name) -> "g.createVertex(\"" ++ name ++ "\", \"" ++ color level ++ "\");") vertices
+        vList = map (\(level, name) -> "g.createVertex(\"" ++ name ++ "\", \"" ++ color level ++ "\", function () { location.href = \"" ++ name ++ ".html\"; });") vertices
         eList = map (\(from, to) -> "g.createEdge(\"" ++ from ++ "\", \"" ++ to ++ "\");") edges
     in unlines $ vList ++ eList
     where
