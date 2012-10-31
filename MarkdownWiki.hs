@@ -67,10 +67,10 @@ nav name pages = unlines
     [ "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"canvas\"></svg>"
     , "<script type=\"text/javascript\">"
     --, "<![CDATA["
-    , "    var g = new Graph(\"canvas\", 800, 300);"
-    , "    // reduce repulsion and spring length for more compact layout"
-    --, "    g.repulsion = g.repulsion / 8;"
-    --, "    g.spring_length = 1;"
+    , "    var g = new Graph(\"canvas\", 800, 400);"
+    --, "    // reduce repulsion and spring length for more compact layout"
+    , "    g.repulsion = g.repulsion / 2;"
+    --, "    g.spring_length = 8;"
     , graph name pages
     , "    g.go();"
     --, "]]>"
@@ -80,14 +80,18 @@ nav name pages = unlines
 graph :: WikiName -> Pages -> String
 graph name pages =
     let (Graph vertices edges) = graphFrom name pages
-        vList = map (\(level, name) -> "g.createVertex(\"" ++ name ++ "\", \"" ++ color level ++ "\", function () { location.href = \"" ++ name ++ ".html\"; });") vertices
+        vList = map (\(level, name) -> "g.createVertex(\"" ++ name ++ "\", \"" ++ color level ++ "\", \"" ++ stroke level ++ "\", function () { location.href = \"" ++ name ++ ".html\"; });") vertices
         eList = map (\(from, to) -> "g.createEdge(\"" ++ from ++ "\", \"" ++ to ++ "\");") edges
     in unlines $ vList ++ eList
     where
-        color 1 = "#ff0000"
-        color 2 = "#00ff00"
-        color 3 = "#0000ff"
-        color _ = "#ffffff"
+        color  1 = "#fcaf3e"
+        color  2 = "#fce94f"
+        color  3 = "#8ae234"
+        color  _ = "#cccccc"
+        stroke 1 = "#ab7423"
+        stroke 2 = "#c4a000"
+        stroke 3 = "#425d26"
+        stroke _ = "#000000"
 
 main :: IO ()
 main = do
