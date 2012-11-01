@@ -56,6 +56,7 @@ templify name html pages = unlines
     , html
     , "        <hr />"
     , nav name pages
+    , "        <hr />"
     , "      </div>"
     , "    </div>"
     , "  </body>"
