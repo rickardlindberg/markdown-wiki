@@ -7,8 +7,14 @@ import System.Directory
 import System.Environment
 import System.FilePath
 import Text.Pandoc
+import Text.StringTemplate
 import Types
 import WikiName
+
+main :: IO ()
+main = do
+    [templatePath, inDir, outDir] <- getArgs
+    readPages inDir >>= writePages templatePath outDir
 
 readPages :: FilePath -> IO Pages
 readPages dir = do
@@ -20,96 +26,26 @@ readPages dir = do
     let pandocs = map (readMarkdown defaultParserState) soyWikiProcessed
     return $ M.fromList (zip wikiFiles pandocs)
 
-writePages :: FilePath -> Pages -> IO ()
-writePages dir pages = mapM_ writePage (M.assocs pages)
+writePages :: FilePath -> FilePath -> Pages -> IO ()
+writePages templatePath dir pages = do
+    templateString <- readFile templatePath
+    mapM_ (writePage (newSTMP templateString)) (M.assocs pages)
     where
-        writePage (name, pandoc) = do
+        writePage st (name, pandoc) = do
             putStrLn $ "Writing " ++ name
-            let html = writeHtmlString defaultWriterOptions (process (getRoot "") pandoc)
-            let templified = templify name html pages
+            let html = writeHtmlString defaultWriterOptions (process root pandoc)
+            let templified = templify st name html pages
             writeFile (dir </> name ++ ".html") templified
 
-getRoot :: String -> String
-getRoot name = "./" ++ name
-
-templify :: WikiName -> String -> Pages -> String
-templify name html pages = unlines
-    [ "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\""
-    , "\"http://www.w3.org/TR/html4/strict.dtd\">"
-    , "<html>"
-    , "  <head>"
-    , "    <title>" ++ name ++ "</title>"
-    , "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
-    , "    <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/blueprint/screen.css\" type=\"text/css\" media=\"screen, projection\">"
-    , "    <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/blueprint/print.css\" type=\"text/css\" media=\"print\"> "
-    , "    <!--[if lt IE 8]>"
-    , "      <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/blueprint/ie.css\" type=\"text/css\" media=\"screen, projection\">"
-    , "    <![endif]-->"
-    , "    <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/pygments/syntax.css\" type=\"text/css\"> "
-    , "    <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/layout.css\" type=\"text/css\"> "
-    , "    <link rel=\"stylesheet\" href=\"" ++ getRoot "static" ++ "/css/colors.css\" type=\"text/css\"> "
-    , "    <script type=\"text/javascript\" src=\"" ++ getRoot "static/js" ++ "/graph.js\"></script>"
-    , "  </head>"
-    , "  <body>"
-    , "    <div class=\"container noshowgrid\">"
-    , "      <div class=\"span-20 prepend-2 append-2\">"
-    , "        <h1>" ++ name ++ "</h1>"
-    , html
-    , "        <hr />"
-    , nav name pages
-    , "        <hr />"
-    , "        <p>"
-    , "        <center>"
-    , "        1. <a href=\"HomePage.html\">HomePage</a>"
-    , "        |"
-    , "        2. <a href=\"StageParsing.html\">StageParsing</a>"
-    , "        |"
-    , "        3. <a href=\"RuntimeSupport.html\">RuntimeSupport</a>"
-    , "        |"
-    , "        4. <a href=\"CodeGeneration.html\">CodeGeneration</a>"
-    , "        |"
-    , "        5. <a href=\"AssembleHex.html\">AssembleHex</a>"
-    , "        </center>"
-    , "        </p>"
-    , "        <hr />"
-    , "      </div>"
-    , "    </div>"
-    , "  </body>"
-    , "</html>"
-    ]
-
-nav :: WikiName -> Pages -> String
-nav name pages = unlines
-    [ "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"canvas\"></svg>"
-    , "<script type=\"text/javascript\">"
-    --, "<![CDATA["
-    , "    var g = new Graph(\"canvas\", 800, 400);"
-    --, "    // reduce repulsion and spring length for more compact layout"
-    , "    g.repulsion = g.repulsion / 2;"
-    --, "    g.spring_length = 8;"
-    , graph name pages
-    , "    g.go();"
-    --, "]]>"
-    , "</script>"
-    ]
-
-graph :: WikiName -> Pages -> String
-graph name pages =
-    let (Graph vertices edges) = graphFrom name pages
-        vList = map (\(level, name) -> "g.createVertex(\"" ++ name ++ "\", \"" ++ color level ++ "\", \"" ++ stroke level ++ "\", function () { location.href = \"" ++ name ++ ".html\"; });") vertices
-        eList = map (\(from, to) -> "g.createEdge(\"" ++ from ++ "\", \"" ++ to ++ "\");") edges
-    in unlines $ vList ++ eList
+templify :: StringTemplate String -> WikiName -> String -> Pages -> String
+templify st name html pages =
+    render $ ( setAttribute "root" root
+             . setAttribute "html" html
+             . setAttribute "name" name
+             . (\st -> foldr (setAttribute "vertices") st vertices)
+             . (\st -> foldr (setAttribute "edges") st edges)
+             ) st
     where
-        color  1 = "#fcaf3e"
-        color  2 = "#fce94f"
-        color  3 = "#8ae234"
-        color  _ = "#cccccc"
-        stroke 1 = "#ab7423"
-        stroke 2 = "#c4a000"
-        stroke 3 = "#425d26"
-        stroke _ = "#000000"
+        (Graph vertices edges) = graphFrom name pages
 
-main :: IO ()
-main = do
-    [inDir, outDir] <- getArgs
-    readPages inDir >>= writePages outDir
+root = "."
