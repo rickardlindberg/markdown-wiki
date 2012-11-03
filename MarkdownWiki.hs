@@ -34,11 +34,12 @@ writePages templatePath dir pages = do
         writePage st (name, pandoc) = do
             putStrLn $ "Writing " ++ name
             let html = writeHtmlString defaultWriterOptions (process root pandoc)
-            let templified = templify st name html pages
+            let templified = templify st name html linkWeb
             writeFile (dir </> name ++ ".html") templified
+        linkWeb = linkWebFrom pages
 
-templify :: StringTemplate String -> WikiName -> String -> Pages -> String
-templify st name html pages =
+templify :: StringTemplate String -> WikiName -> String -> LinkWeb -> String
+templify st name html linkWeb =
     render $ ( setAttribute "root" root
              . setAttribute "html" html
              . setAttribute "name" name
@@ -46,6 +47,6 @@ templify st name html pages =
              . (\st -> foldr (setAttribute "edges") st edges)
              ) st
     where
-        (Graph vertices edges) = graphFrom name pages
+        (Graph vertices edges) = graphFrom name linkWeb
 
 root = "."

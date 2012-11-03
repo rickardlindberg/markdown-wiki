@@ -16,10 +16,9 @@ data Graph = Graph
     , edges    :: [(WikiName, WikiName)]
     }
 
-graphFrom :: WikiName -> Pages -> Graph
-graphFrom name pages =
-    let linkWeb  = linkWebFrom pages
-        vertices = expandTree name linkWeb
+graphFrom :: WikiName -> LinkWeb -> Graph
+graphFrom name linkWeb =
+    let vertices = expandTree name linkWeb
         edges    = findLinks (map snd vertices) linkWeb
     in Graph vertices edges
 
