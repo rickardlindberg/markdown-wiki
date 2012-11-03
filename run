@@ -1,5 +1,11 @@
 #!/bin/sh
+
 PROFILE_COMPILE="-prof -auto-all -rtsopts"
 PROFILE_RUN="+RTS -p"
+
+PROFILE_COMPILE=""
+PROFILE_RUN=""
+
 mkdir -p bin
+
 ghc $PROFILE_COMPILE -Werror -fwarn-unused-imports -outputdir bin -o bin/MarkdownWiki --make MarkdownWiki.hs -main-is MarkdownWiki && ./bin/MarkdownWiki $* $PROFILE_RUN
