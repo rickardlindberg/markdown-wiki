@@ -1,6 +1,6 @@
 module WikiName where
 
-import Text.Regex.Posix
+import Text.Regex.PCRE
 
 wikiNameRegex = "\\b([A-Z][a-z]+)([A-Z][a-z]+)+\\b"
 
